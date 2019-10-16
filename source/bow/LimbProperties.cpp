@@ -2,8 +2,6 @@
 #include "bow/ContinuousLimb.hpp"
 #include "numerics/Linspace.hpp"
 
-#define CROWN_COMPENSATION_ENABLED 1
-
 LimbProperties::LimbProperties(const InputData& input)
     : LimbProperties(input, input.settings.n_limb_elements + 1)
 {
