@@ -80,12 +80,14 @@ StaticOutputWidget::StaticOutputWidget(const OutputData& data)
     numbers->addColumn();
     numbers->addGroup("Performance");
     numbers->addValue("Final draw force [N]", data.statics.final_draw_force);
+    numbers->addValue("Final draw force [#]", data.statics.final_draw_force * 0.224809);
     numbers->addValue("Drawing work [J]", data.statics.drawing_work);
     numbers->addValue("Storage ratio", data.statics.storage_ratio);
     numbers->addGroup("Properties");
     numbers->addValue("Limb mass [kg]", data.setup.limb_mass);
     numbers->addValue("String mass [kg]", data.setup.string_mass);
     numbers->addValue("String length [m]", data.setup.string_length);
+    numbers->addValue("String length [\"]", data.setup.string_length / 100 * 2.54);
     numbers->addColumn();
     numbers->addGroup("Maximum absolute stresses");
     for(int i = 0; i < data.statics.max_stress_index.size(); ++i) {
@@ -156,6 +158,8 @@ DynamicOutputWidget::DynamicOutputWidget(const OutputData& data)
     numbers->addColumn();
     numbers->addGroup("Performance");
     numbers->addValue("Final arrow velocity [m/s]", data.dynamics.final_vel_arrow);
+    numbers->addValue("Final arrow velocity [f/s]", data.dynamics.final_vel_arrow * 3.28084);
+    numbers->addValue("Maximum arrow height [m]", data.dynamics.final_vel_arrow*data.dynamics.final_vel_arrow/2/9.81);
     numbers->addValue("Degree of efficiency", data.dynamics.efficiency);
     numbers->addGroup("Energy at arrow departure");
     numbers->addValue("Kinetic energy arrow [J]", data.dynamics.final_e_kin_arrow);
