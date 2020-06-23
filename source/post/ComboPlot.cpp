@@ -77,9 +77,13 @@ void ComboPlot::updatePlot()
     auto x = combo_x->currentData().value<const std::vector<double>*>();
     auto y = combo_y->currentData().value<const std::vector<double>*>();
 
+    bool include_zero_x = false;
+    bool include_zero_y = false;
+    if (combo_x->currentIndex()==0&&combo_y->currentIndex()==1) {include_zero_x=true; include_zero_y=true; }
+
     curve->setData(*x, *y);
     plot->xAxis->setLabel(combo_x->currentText());
     plot->yAxis->setLabel(combo_y->currentText());
-    plot->rescaleAxes();
+    plot->rescaleAxes(include_zero_x,include_zero_y);
     plot->replot();
 }
