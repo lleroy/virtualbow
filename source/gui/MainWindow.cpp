@@ -11,38 +11,38 @@ MainWindow::MainWindow()
       menu_recent(new RecentFilesMenu(this))
 {
     // Actions
-    auto action_new = new QAction(QIcon(":/icons/document-new.png"), "&New", this);
+    action_new = new QAction(QIcon(":/icons/document-new.png"), "&New", this);
     QObject::connect(action_new, &QAction::triggered, this, &MainWindow::newFile);
     action_new->setShortcuts(QKeySequence::New);
     action_new->setMenuRole(QAction::NoRole);
 
-    auto action_open = new QAction(QIcon(":/icons/document-open.png"), "&Open...", this);
+    action_open = new QAction(QIcon(":/icons/document-open.png"), "&Open...", this);
     QObject::connect(action_open, &QAction::triggered, this, &MainWindow::open);
     action_open->setShortcuts(QKeySequence::Open);
     action_open->setMenuRole(QAction::NoRole);
 
-    auto action_save = new QAction(QIcon(":/icons/document-save.png"), "&Save", this);
+    action_save = new QAction(QIcon(":/icons/document-save.png"), "&Save", this);
     QObject::connect(action_save, &QAction::triggered, this, &MainWindow::save);
     action_save->setShortcuts(QKeySequence::Save);
     action_save->setMenuRole(QAction::NoRole);
 
-    auto action_save_as = new QAction(QIcon(":/icons/document-save-as.png"), "Save &As...", this);
+    action_save_as = new QAction(QIcon(":/icons/document-save-as.png"), "Save &As...", this);
     QObject::connect(action_save_as, &QAction::triggered, this, &MainWindow::saveAs);
     action_save_as->setShortcuts(QKeySequence::SaveAs);
     action_save_as->setMenuRole(QAction::NoRole);
 
-    auto action_quit = new QAction(QIcon(":/icons/application-exit.png"), "&Quit", this);
+    action_quit = new QAction(QIcon(":/icons/application-exit.png"), "&Quit", this);
     QObject::connect(action_quit, &QAction::triggered, this, &QWidget::close);
     action_quit->setShortcuts(QKeySequence::Quit);
     action_quit->setMenuRole(QAction::QuitRole);
 
-    auto action_run_statics = new QAction(QIcon(":/icons/run-statics"), "&Statics...", this);
+    action_run_statics = new QAction(QIcon(":/icons/run-statics"), "&Statics...", this);
     QObject::connect(action_run_statics, &QAction::triggered, [&]{ runSimulation("--static"); });
     action_run_statics->setShortcut(Qt::Key_F5);
     action_run_statics->setMenuRole(QAction::NoRole);
     action_run_statics->setIconVisibleInMenu(true);
 
-    auto action_run_dynamics = new QAction(QIcon(":/icons/run-dynamics"), "&Dynamics...", this);
+    action_run_dynamics = new QAction(QIcon(":/icons/run-dynamics"), "&Dynamics...", this);
     QObject::connect(action_run_dynamics, &QAction::triggered, [&]{ runSimulation("--dynamic"); });
     action_run_dynamics->setShortcut(Qt::Key_F6);
     action_run_dynamics->setMenuRole(QAction::NoRole);
@@ -71,6 +71,7 @@ MainWindow::MainWindow()
     this->setContextMenuPolicy(Qt::NoContextMenu);    // Disables context menu for hiding the toolbar
     auto toolbar = this->addToolBar("Tools");
     toolbar->setObjectName("MainToolBar");            // Necessary for saving the window state
+    toolbar->setAutoFillBackground(true);
     toolbar->setMovable(false);
     toolbar->addAction(action_new);
     toolbar->addAction(action_open);
@@ -84,7 +85,9 @@ MainWindow::MainWindow()
     this->menuBar()->addMenu(new HelpMenu(this));
 
     // Main window
-    this->setWindowIcon(QIcon(":/icons/logo.ico"));
+    this->setWindowIcon(QIcon(":/icons/logo.png"));
+    this->setStyleSheet("QMainWindow { background-image:url(:/icons/background.png); background-position: center; background-repeat: no-repeat; }");
+    this->menuBar()->setAutoFillBackground(true);
     this->setCentralWidget(editor);
     this->resize(INITIAL_SIZE);
     setCurrentFile(QString());
@@ -100,8 +103,8 @@ MainWindow::MainWindow()
         this->setModified(new_data != data);
     });
 
-    // Set initial input data
-    newFile();
+    // Disable editing until a file has been loaded or created
+    setEditingEnabled(false);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -130,6 +133,7 @@ bool MainWindow::loadFile(const QString& path)
         editor->setData(data);
         setCurrentFile(path);
         setModified(false);
+        setEditingEnabled(true);
         return true;
     }
     catch(const std::exception& e)  // Todo
@@ -147,7 +151,6 @@ bool MainWindow::saveFile(const QString& path)
         data.save(path.toStdString());
         setCurrentFile(path);
         setModified(false);
-
         return true;
     }
     catch(const std::exception& e)  // Todo
@@ -159,14 +162,14 @@ bool MainWindow::saveFile(const QString& path)
 
 void MainWindow::newFile()
 {
-    if(!optionalSave())
+    if(!saveAs())
         return;
 
     data = InputData();
     editor->setData(data);
 
-    setCurrentFile("");
     setModified(false);
+    setEditingEnabled(true);
 }
 
 void MainWindow::open()
@@ -214,21 +217,8 @@ bool MainWindow::saveAs()
 
 void MainWindow::runSimulation(const QString& flag)
 {
-    // Make sure the current data is saved to a file
-    if(this->windowFilePath().isEmpty())
-    {
-        int pick = QMessageBox::warning(this, "Save Document?", "The document needs to be saved before running a simulation.\nDo you want to save now?",
-                                        QMessageBox::Yes | QMessageBox::Cancel);
-        if(pick != QMessageBox::Yes)
-            return;
-
-        if(!saveAs())
-            return;
-    }
-    else
-    {
-        save();
-    }
+    if(!save())
+        return;
 
     // Generate output filename
     QFileInfo info(this->windowFilePath());
@@ -267,6 +257,15 @@ void MainWindow::setCurrentFile(const QString &path)
     QTimer::singleShot(0, [](){QApplication::setApplicationDisplayName(QString::null);});
 }
 
+void MainWindow::setEditingEnabled(bool enabled)
+{
+    editor->setVisible(enabled);
+    action_save->setEnabled(enabled);
+    action_save_as->setEnabled(enabled);
+    action_run_statics->setEnabled(enabled);
+    action_run_dynamics->setEnabled(enabled);
+}
+
 // true: Discard and save, false: Cancel and don't save
 bool MainWindow::optionalSave()
 {
@@ -281,5 +280,6 @@ bool MainWindow::optionalSave()
         case QMessageBox::Save: return save();
         case QMessageBox::Discard: return true;
         case QMessageBox::Cancel: return false;
+        default: return false;  // Can't happen
     }
 }

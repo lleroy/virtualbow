@@ -13,6 +13,11 @@
 \usepackage{units}
 \usepackage{relsize}    % \mathlarger
 
+% Custom operators
+\DeclareMathOperator*{\argmin}{\arg\!\min}    % https://tex.stackexchange.com/a/5255
+\DeclareMathOperator*{\argmax}{\arg\!\max}    % https://tex.stackexchange.com/a/5255
+\DeclareMathOperator*{\sgn}{sgn}
+
 \usepackage[hidelinks, pdfusetitle]{hyperref}
 \usepackage{color}
 
@@ -20,7 +25,7 @@
 % \allowdisplaybreaks		% Break aligned equations over pages
 
 % Parameters
-\newcommand{\version}{0.7.1}
+\newcommand{\version}{0.8}
 \newcommand{\website}{\href{http://www.virtualbow.org/}{\texttt{\textcolor{blue}{http://www.virtualbow.org/}}}}
 \newcommand{\copyrights}{Copyright (C) 2016-2020 Stefan Pfeifer}
 
